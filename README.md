@@ -1,4 +1,4 @@
-# HDFC Mutual Fund FAQ Assistant
+# Mutual Fund FAQ Assistant
 
 A working product prototype that turns official mutual fund documents into short, cited answers. Ask about scheme fees, lock-in periods, benchmarks, or statement-download steps; the assistant answers from its document corpus and declines investment advice and returns comparisons.
 
