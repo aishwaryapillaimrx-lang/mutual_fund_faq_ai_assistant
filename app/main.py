@@ -10,7 +10,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from app.catalog import SCHEMES
-from app.config import ANTHROPIC_API_KEY, STATIC_DIR
+from app.config import ANTHROPIC_API_KEY, GROQ_API_KEY, STATIC_DIR
 from app.pipeline import answer_question
 from app.rag.retrieve import index_chunk_counts
 
@@ -26,8 +26,8 @@ async def lifespan(_: FastAPI):
         logger.error("Document index is empty or missing; run: python scripts/ingest.py")
     elif missing:
         logger.error("Index has no chunks for: %s; re-run scripts/ingest.py", ", ".join(missing))
-    if not ANTHROPIC_API_KEY:
-        logger.error("ANTHROPIC_API_KEY is not set; factual answers will show 'Service busy'")
+    if not (ANTHROPIC_API_KEY or GROQ_API_KEY):
+        logger.error("No answer-provider API key is set; factual answers will show 'Service busy'")
     yield
 
 
@@ -49,6 +49,15 @@ class ChatResponse(BaseModel):
 @app.get("/health")
 def health() -> dict[str, bool]:
     return {"ok": True}
+
+
+@app.get("/schemes")
+def schemes() -> list[dict]:
+    return [
+        {"id": scheme.scheme_id, "name": scheme.display_name.split(chr(0x2013))[0].strip(),
+         "category": scheme.category, "aliases": list(scheme.aliases)}
+        for scheme in SCHEMES
+    ]
 
 
 @app.get("/")

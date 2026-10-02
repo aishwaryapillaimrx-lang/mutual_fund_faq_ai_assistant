@@ -37,7 +37,7 @@ SCHEMES: tuple[Scheme, ...] = (
     ),
     Scheme(
         scheme_id="hdfc_equity_fund_direct_growth",
-        display_name="HDFC Equity Fund – Direct Growth",
+        display_name="HDFC Flexi Cap Fund – Direct Growth",
         category="flexi_cap",
         aliases=(
             "hdfc equity fund",

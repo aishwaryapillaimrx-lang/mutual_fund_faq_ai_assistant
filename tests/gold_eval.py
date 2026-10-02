@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+import time
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -31,6 +32,9 @@ def score_item(item: dict, response: dict) -> list[str]:
     for needle in item.get("must_include", []):
         if needle.lower() not in answer.lower():
             problems.append(f"missing '{needle}'")
+    for alternatives in item.get("must_include_any", []):
+        if not any(phrase.lower() in answer.lower() for phrase in alternatives):
+            problems.append(f"missing any of {alternatives}")
     if not response["source_url"] or not _host_ok(response["source_url"], item["source_host_allowlist"]):
         problems.append(f"source host not allowed: {response['source_url'][:60]}")
     if not response["last_updated"]:
@@ -42,9 +46,11 @@ def score_item(item: dict, response: dict) -> list[str]:
     return problems
 
 
-def run_gold() -> list[tuple[dict, dict, list[str]]]:
+def run_gold(*, interval_seconds: float = 15.0) -> list[tuple[dict, dict, list[str]]]:
     rows = []
     for item in load_gold():
+        if rows and interval_seconds > 0:
+            time.sleep(interval_seconds)
         response = answer_question(item["question"])
         rows.append((item, response, score_item(item, response)))
     return rows

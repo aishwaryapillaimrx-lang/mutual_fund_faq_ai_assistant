@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import logging
+import math
+import time
 from collections.abc import Sequence
 
 import anthropic
@@ -40,7 +42,6 @@ def _try_anthropic(question: str, chunks: Sequence[RetrievedChunk]) -> str | Non
             model=config.CHAT_MODEL,
             max_tokens=MAX_TOKENS,
             system=SYSTEM_PROMPT,
-            output_config={"effort": "low"},
             messages=[{"role": "user", "content": build_user_message(question, chunks)}],
         )
     except anthropic.APIError as exc:  # timeouts, connection, status errors
@@ -69,7 +70,7 @@ def _try_groq(question: str, chunks: Sequence[RetrievedChunk]) -> str | None:
         return None
     
     try:
-        from groq import Groq
+        from groq import Groq, RateLimitError
     except ImportError:
         logger.error("groq library not installed, cannot use Groq fallback")
         return None
@@ -77,67 +78,50 @@ def _try_groq(question: str, chunks: Sequence[RetrievedChunk]) -> str | None:
     client = Groq(
         api_key=config.GROQ_API_KEY,
         timeout=config.LLM_TIMEOUT_SECONDS,
+        max_retries=0,
     )
+    options = {"temperature": 0}
+    if config.GROQ_CHAT_MODEL.startswith("openai/gpt-oss-"):
+        options["reasoning_effort"] = "low"
+    request = dict(
+        model=config.GROQ_CHAT_MODEL,
+        max_tokens=1024,
+        messages=[
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": build_user_message(question, chunks)},
+        ],
+        **options,
+    )
+    deadline = time.monotonic() + config.LLM_TIMEOUT_SECONDS
     try:
-        response = client.chat.completions.create(
-            model=config.GROQ_CHAT_MODEL,
-            max_tokens=MAX_TOKENS,
-            system=SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": build_user_message(question, chunks)}],
-        )
-    except Exception as exc:  # catch all Groq exceptions
+        try:
+            response = client.chat.completions.create(**request)
+        except RateLimitError as exc:
+            # Retry once only when the provider delay fits within the request budget.
+            try:
+                delay = float(exc.response.headers.get("retry-after", "1"))
+            except (TypeError, ValueError):
+                delay = 1.0
+            remaining = deadline - time.monotonic()
+            if not math.isfinite(delay) or delay < 0 or delay > min(15.0, remaining - 1):
+                raise
+            time.sleep(delay)
+            response = client.with_options(timeout=deadline - time.monotonic()).chat.completions.create(**request)
+    except Exception as exc:
         logger.error("Groq API call failed: %s", type(exc).__name__)
         return None
 
-    if not response.choices:
-        logger.error("Groq returned no choices")
+    if not response.choices or response.choices[0].finish_reason != "stop":
+        logger.error("Groq returned no complete answer")
         return None
-    
+
     text = response.choices[0].message.content
-    if isinstance(text, str):
-        text = text.strip()
-    
-    if not text:
-        logger.error("Groq returned empty output")
-        return None
-    
-    return text
+    return text.strip() if isinstance(text, str) and text.strip() else None
 
 
 def generate_answer(question: str, chunks: Sequence[RetrievedChunk]) -> str:
-    if config.ANTHROPIC_API_KEY:
-        try:
-            client = anthropic.Anthropic(
-                api_key=config.ANTHROPIC_API_KEY,
-                timeout=config.LLM_TIMEOUT_SECONDS,
-                max_retries=1,
-            )
-            response = client.messages.create(
-                model=config.CHAT_MODEL,
-                max_tokens=MAX_TOKENS,
-                system=SYSTEM_PROMPT,
-                messages=[{"role": "user", "content": build_user_message(question, chunks)}],
-            )
-            text = "".join(b.text for b in response.content if b.type == "text").strip()
-            if text:
-                return text
-        except Exception:
-            pass
-
-    if config.GROQ_API_KEY:
-        try:
-            from groq import Groq
-            client = Groq(api_key=config.GROQ_API_KEY, timeout=config.LLM_TIMEOUT_SECONDS)
-            response = client.chat.completions.create(
-                model=config.GROQ_CHAT_MODEL,
-                max_tokens=MAX_TOKENS,
-                system=SYSTEM_PROMPT,
-                messages=[{"role": "user", "content": build_user_message(question, chunks)}],
-            )
-            text = response.choices[0].message.content
-            if isinstance(text, str) and text.strip():
-                return text.strip()
-        except Exception:
-            pass
-
+    for provider in (_try_anthropic, _try_groq):
+        text = provider(question, chunks)
+        if text:
+            return text
     raise GenerationError("all providers exhausted")

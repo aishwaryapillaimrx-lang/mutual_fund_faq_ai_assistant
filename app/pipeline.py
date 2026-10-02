@@ -37,12 +37,13 @@ def _response(
     answer: str,
     source_url: str,
     scheme_id: str | None,
+    snapshot_date: str = CORPUS_SNAPSHOT_DATE,
 ) -> dict[str, Any]:
     return {
         "type": type_,
         "answer": answer,
         "source_url": source_url,
-        "last_updated": CORPUS_SNAPSHOT_DATE,
+        "last_updated": snapshot_date,
         "scheme_id": scheme_id,
     }
 
@@ -153,5 +154,6 @@ def answer_question(question: str) -> dict[str, Any]:
             scheme_id=policy.scheme_id,
         )
     return _response(
-        type_="factual", answer=answer, source_url=source_url, scheme_id=policy.scheme_id
+        type_="factual", answer=answer, source_url=source_url, scheme_id=policy.scheme_id,
+        snapshot_date=next((c.snapshot_date for c in used if c.source_url == source_url), CORPUS_SNAPSHOT_DATE)
     )

@@ -24,16 +24,20 @@ CORPUS_SNAPSHOT_DATE = os.getenv("CORPUS_SNAPSHOT_DATE", "2026-09-27")
 # LLM_API_KEY / LLM_BASE_URL are only used for OpenAI-compatible embeddings.
 LLM_API_KEY = os.getenv("LLM_API_KEY", "")
 LLM_BASE_URL = os.getenv("LLM_BASE_URL", "https://api.openai.com/v1")
+# "hf:BAAI/bge-small-en-v1.5" uses hosted Hugging Face embeddings.
 EMBED_MODEL = os.getenv("EMBED_MODEL", "local")
+HF_TOKEN = os.getenv("HF_TOKEN", "")
+HF_EMBED_TIMEOUT_SECONDS = float(os.getenv("HF_EMBED_TIMEOUT_SECONDS", "60"))
 
 # Answer generation uses Claude first; Groq is the fallback.
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 CHAT_MODEL = os.getenv("CHAT_MODEL") or "claude-sonnet-5-5"
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
-GROQ_CHAT_MODEL = os.getenv("GROQ_CHAT_MODEL", "mixtral-8x7b-32768")
+GROQ_CHAT_MODEL = os.getenv("GROQ_CHAT_MODEL", "openai/gpt-oss-20b")
 LLM_TIMEOUT_SECONDS = float(os.getenv("LLM_TIMEOUT_SECONDS", "30"))
-RETRIEVAL_SCORE_THRESHOLD = float(os.getenv("RETRIEVAL_SCORE_THRESHOLD", "0.35"))
+_default_threshold = "0.70" if EMBED_MODEL == "hf:BAAI/bge-small-en-v1.5" else "0.35"
+RETRIEVAL_SCORE_THRESHOLD = float(os.getenv("RETRIEVAL_SCORE_THRESHOLD", _default_threshold))
 
 # Official hosts only; subdomains are allowed (e.g. files.hdfcfund.com).
 ALLOWED_HOSTS = tuple(

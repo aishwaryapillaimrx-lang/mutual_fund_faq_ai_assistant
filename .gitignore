@@ -3,5 +3,9 @@
 __pycache__/
 *.pyc
 .env
-data/corpus/
+data/corpus/*
+!data/corpus/manual/
+data/corpus/manual/*
+!data/corpus/manual/hdfc-capital-gain-statement.html
 data/index/
+data/index-*/

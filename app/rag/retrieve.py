@@ -7,12 +7,12 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from app.config import COLLECTION_NAME, INDEX_DIR, RETRIEVAL_SCORE_THRESHOLD
+from app.config import COLLECTION_NAME, EMBED_MODEL, INDEX_DIR, RETRIEVAL_SCORE_THRESHOLD
 from app.rag.ingest import get_embed_fn, open_client
 
 logger = logging.getLogger(__name__)
 
-TOP_K = 6
+TOP_K = 3
 CANDIDATES = 24  # pulled by embedding, then re-ranked with a keyword boost
 KEYWORD_WEIGHT = 0.15
 
@@ -65,7 +65,10 @@ def retrieve(
         if collection.count() == 0:
             logger.error("Index is empty; run scripts/ingest.py")
             return []
-        embed = embed_fn or get_embed_fn()
+        if embed_fn is None and (collection.metadata or {}).get("embed_model") != EMBED_MODEL:
+            logger.error("Index embedding model differs from configuration; re-run scripts/ingest.py")
+            return []
+        embed = embed_fn or get_embed_fn(query=True)
         result = collection.query(
             query_embeddings=embed([question]),
             n_results=max(k, CANDIDATES),

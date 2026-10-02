@@ -1,194 +1,167 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>HDFC MF facts-only FAQ</title>
-    <style>
-      :root {
-        color-scheme: light;
-        --ink: #12202e;
-        --muted: #5b6b7a;
-        --line: #d7e0e8;
-        --paper: #f6f8fa;
-        --card: #ffffff;
-        --accent: #0b6e4f;
-        --accent-soft: #e6f4ee;
-        --user: #e8eef4;
-      }
-      * { box-sizing: border-box; }
-      body {
-        margin: 0;
-        font-family: "Segoe UI", system-ui, sans-serif;
-        background: var(--paper);
-        color: var(--ink);
-      }
-      main {
-        max-width: 40rem;
-        margin: 0 auto;
-        padding: 1.5rem 1rem 2.5rem;
-      }
-      h1 { font-size: 1.25rem; margin: 0 0 0.35rem; }
-      .welcome { color: var(--muted); margin: 0 0 1rem; line-height: 1.45; }
-      .disclaimer {
-        display: inline-block;
-        background: var(--accent-soft);
-        color: var(--accent);
-        font-size: 0.85rem;
-        font-weight: 600;
-        padding: 0.35rem 0.65rem;
-        border-radius: 999px;
-        margin-bottom: 1rem;
-      }
-      .chips { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
-      .chips button {
-        text-align: left;
-        border: 1px solid var(--line);
-        background: var(--card);
-        border-radius: 0.6rem;
-        padding: 0.65rem 0.75rem;
-        cursor: pointer;
-        color: var(--ink);
-        font: inherit;
-      }
-      .chips button:hover { border-color: var(--accent); }
-      #transcript {
-        min-height: 12rem;
-        background: var(--card);
-        border: 1px solid var(--line);
-        border-radius: 0.75rem;
-        padding: 0.75rem;
-        margin-bottom: 0.75rem;
-        display: flex;
-        flex-direction: column;
-        gap: 0.65rem;
-      }
-      .msg { padding: 0.65rem 0.75rem; border-radius: 0.65rem; line-height: 1.45; }
-      .msg.user { background: var(--user); align-self: flex-end; max-width: 90%; }
-      .msg.bot { background: var(--accent-soft); }
-      .msg a { color: var(--accent); word-break: break-all; }
-      .meta { font-size: 0.85rem; color: var(--muted); margin-top: 0.4rem; }
-      form { display: flex; gap: 0.5rem; }
-      input[type="text"] {
-        flex: 1;
-        padding: 0.7rem 0.75rem;
-        border: 1px solid var(--line);
-        border-radius: 0.6rem;
-        font: inherit;
-      }
-      form button[type="submit"] {
-        background: var(--accent);
-        color: white;
-        border: 0;
-        border-radius: 0.6rem;
-        padding: 0.7rem 1rem;
-        font: inherit;
-        font-weight: 600;
-        cursor: pointer;
-      }
-      .error { color: #9b1c1c; }
-    </style>
-  </head>
-  <body>
-    <main>
-      <p class="disclaimer">Facts-only. No investment advice.</p>
-      <h1>HDFC mutual fund FAQ</h1>
-      <p class="welcome">
-        Ask factual questions about five HDFC mutual fund schemes.
-      </p>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HDFC mutual fund FAQ</title>
+  <style>
+    :root { color-scheme: light; --ink: #18332d; --muted: #64756e; --line: #dce5df; --accent: #17654d; --soft: #edf5ef; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #f4f6f2; color: var(--ink); font-family: "Segoe UI", system-ui, sans-serif; }
+    main { max-width: 48rem; margin: 0 auto; padding: 2.5rem 1.25rem; }
+    .eyebrow { margin: 0 0 .6rem; font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); font-weight: 700; }
+    h1 { font-size: clamp(1.65rem, 5vw, 2.2rem); letter-spacing: -.04em; margin: 0 0 .55rem; }
+    .welcome { color: var(--muted); line-height: 1.6; margin: 0 0 .8rem; }
+    .disclaimer { display: inline-block; font-size: .8rem; color: var(--accent); background: #e4eee5; border-radius: 2rem; padding: .4rem .7rem; margin: 0 0 1.5rem; }
+    .scope { background: white; border: 1px solid var(--line); border-radius: 1rem; padding: 1rem; margin-bottom: 1rem; }
+    label { display: block; font-size: .85rem; font-weight: 600; margin-bottom: .45rem; }
+    select, input, button { font: inherit; }
+    select { width: 100%; border: 1px solid var(--line); border-radius: .6rem; background: #fff; color: var(--ink); padding: .7rem; }
+    .hint { color: var(--muted); font-size: .8rem; line-height: 1.5; margin: .6rem 0 0; }
+    .suggestion-label { font-size: .8rem; color: var(--muted); margin: 1rem 0 .6rem; }
+    .chips { display: flex; flex-wrap: wrap; gap: .5rem; }
+    .chips button { border: 1px solid var(--line); background: #fff; color: var(--ink); text-align: left; padding: .65rem .8rem; border-radius: .65rem; font-size: .85rem; cursor: pointer; }
+    .chips button:hover { border-color: var(--accent); background: var(--soft); }
+    .chat { margin-top: 1.5rem; background: white; border: 1px solid var(--line); border-radius: 1rem; overflow: hidden; }
+    #transcript { min-height: 15rem; max-height: 30rem; overflow-y: auto; padding: 1.1rem; display: flex; flex-direction: column; gap: 1rem; }
+    .empty { text-align: center; margin: auto; padding: 2rem 1rem; }
+    .empty strong { display: block; font-size: 1.05rem; margin-bottom: .5rem; }
+    .empty p { color: var(--muted); font-size: .9rem; line-height: 1.6; max-width: 26rem; margin: 0; }
+    .msg { padding: .85rem 1rem; border-radius: .85rem; line-height: 1.65; overflow-wrap: anywhere; }
+    .msg.user { background: #eef0f3; align-self: flex-end; max-width: 90%; }
+    .msg.bot { background: var(--soft); }
+    .msg.pending { color: var(--muted); background: #f5f7f5; }
+    .state { display: block; font-size: .7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); margin-bottom: .35rem; }
+    .meta { border-top: 1px solid #d9e6dc; margin-top: .8rem; padding-top: .65rem; font-size: .78rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: .4rem 1rem; align-items: center; }
+    .meta a { color: var(--accent); font-weight: 600; text-underline-offset: .2em; }
+    .composer { border-top: 1px solid var(--line); padding: 1rem; background: #fcfdfb; }
+    .input-row { display: flex; gap: .5rem; }
+    input { min-width: 0; flex: 1; border: 1px solid var(--line); border-radius: .65rem; padding: .8rem; background: white; color: var(--ink); }
+    .send { background: var(--accent); color: white; border: 0; border-radius: .65rem; padding: .8rem 1.1rem; font-weight: 600; cursor: pointer; }
+    button:disabled { opacity: .55; cursor: wait; }
+    input:disabled, select:disabled { background: #f2f4f1; }
+    :focus-visible { outline: 3px solid #9fcaac; outline-offset: 3px; }
+    .error { color: #9b3030; background: #fff3ee !important; }
+    @media (max-width: 480px) { main { padding: 1.5rem .8rem; } #transcript { padding: .8rem; } .composer { padding: .8rem; } .meta { flex-direction: column; align-items: flex-start; } .send { padding: .8rem; } }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="eyebrow">Your scheme facts, explained</p>
+    <h1>HDFC mutual fund FAQ</h1>
+    <p class="welcome">Ask factual questions about five HDFC mutual fund schemes.</p>
+    <p class="disclaimer">Facts-only. No investment advice.</p>
+    <div class="scope">
+      <label for="fund">Choose a fund</label>
+      <select id="fund" aria-describedby="fund-hint" disabled><option value="">All five funds</option></select>
+      <p id="fund-hint" class="hint">Select a fund for short questions. If you name a fund in your question, that takes priority.</p>
+      <p class="suggestion-label">Try a question</p>
       <div class="chips" id="chips">
-        <button type="button" data-q="What is the expense ratio of HDFC Large Cap Fund Direct Growth?">
-          What is the expense ratio of HDFC Large Cap Fund Direct Growth?
-        </button>
-        <button type="button" data-q="What is the lock-in for HDFC ELSS Tax Saver?">
-          What is the lock-in for HDFC ELSS Tax Saver?
-        </button>
-        <button type="button" data-q="How do I download a capital-gains statement?">
-          How do I download a capital-gains statement?
-        </button>
+        <button type="button" data-q="What is the expense ratio of HDFC Large Cap Fund Direct Growth?">Large Cap expense ratio</button>
+        <button type="button" data-q="What is the lock-in for HDFC ELSS Tax Saver?">ELSS lock-in period</button>
+        <button type="button" data-q="How do I download a capital-gains statement?">Download a capital-gains statement</button>
       </div>
-      <div id="transcript" aria-live="polite"></div>
-      <form id="chat-form">
-        <input
-          id="question"
-          type="text"
-          name="question"
-          autocomplete="off"
-          placeholder="Ask a scheme fact…"
-        />
-        <button type="submit">Send</button>
+    </div>
+    <section class="chat" aria-label="Chat assistant">
+      <div id="transcript" role="log" aria-live="polite" aria-relevant="additions">
+        <div class="empty" id="empty"><strong>What would you like to know?</strong><p>Ask about fees, lock-in periods or benchmarks. Answers include an official source so you can check the details.</p></div>
+      </div>
+      <form id="chat-form" class="composer">
+        <label for="question">Your question</label>
+        <div class="input-row"><input id="question" type="text" name="question" autocomplete="off" maxlength="4000" placeholder="Ask a scheme fact..." aria-describedby="privacy-hint" required /><button class="send" id="send" type="submit">Send</button></div>
+        <p class="hint" id="privacy-hint">Keep PAN, account numbers, OTPs and other personal details out of this chat.</p>
       </form>
-    </main>
-    <script>
-      const form = document.getElementById("chat-form");
-      const input = document.getElementById("question");
-      const transcript = document.getElementById("transcript");
+    </section>
+  </main>
+  <script>
+    const form = document.getElementById("chat-form");
+    const input = document.getElementById("question");
+    const transcript = document.getElementById("transcript");
+    const fund = document.getElementById("fund");
+    const chips = document.getElementById("chips");
+    const send = document.getElementById("send");
+    const defaults = Array.from(chips.querySelectorAll("button")).map(b => ({ label: b.textContent, question: b.dataset.q }));
+    let schemes = [];
+    let busy = false;
 
-      function addUser(text) {
-        const el = document.createElement("div");
-        el.className = "msg user";
-        el.textContent = text;
-        transcript.appendChild(el);
-      }
-
-      function addBot(data) {
-        const el = document.createElement("div");
-        el.className = "msg bot";
-        const answer = document.createElement("div");
-        answer.textContent = data.answer || "";
-        el.appendChild(answer);
-        const meta = document.createElement("div");
-        meta.className = "meta";
-        const link = document.createElement("a");
-        link.href = data.source_url;
-        link.target = "_blank";
-        link.rel = "noopener noreferrer";
-        link.textContent = data.source_url;
-        meta.append("Source: ", link);
-        meta.appendChild(document.createElement("br"));
-        meta.append("Last updated from sources: " + (data.last_updated || ""));
-        el.appendChild(meta);
-        transcript.appendChild(el);
-        transcript.scrollTop = transcript.scrollHeight;
-      }
-
-      function addError(message) {
-        const el = document.createElement("div");
-        el.className = "msg bot error";
-        el.textContent = message;
-        transcript.appendChild(el);
-      }
-
-      async function sendQuestion(text) {
-        const question = (text || "").trim();
-        if (!question) return;
-        addUser(question);
-        input.value = "";
-        try {
-          const res = await fetch("/chat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ question }),
-          });
-          if (!res.ok) throw new Error("Request failed");
-          const data = await res.json();
-          addBot(data);
-        } catch (err) {
-          addError("Could not reach the assistant. Try again.");
+    function revealChat() { document.getElementById("empty")?.remove(); }
+    function scrollChat() { transcript.scrollTop = transcript.scrollHeight; }
+    function setBusy(value) {
+      busy = value;
+      send.disabled = value; input.disabled = value; fund.disabled = value || !schemes.length;
+      chips.querySelectorAll("button").forEach(button => { button.disabled = value; });
+      send.textContent = value ? "Waiting..." : "Send";
+      transcript.setAttribute("aria-busy", String(value));
+    }
+    function addUser(text) {
+      const el = document.createElement("div"); el.className = "msg user"; el.textContent = text;
+      transcript.appendChild(el);
+    }
+    function addBot(data) {
+      const el = document.createElement("div"); el.className = "msg bot";
+      const state = document.createElement("span"); state.className = "state";
+      const labels = { factual: "From official sources", pii: "Personal details blocked", refusal: "Outside the assistant's scope", clarify: "A little more detail needed", not_found: "Not in the available documents" };
+      const unavailable = /service busy|index is unavailable/i.test(data.answer || "");
+      state.textContent = unavailable ? "Temporarily unavailable" : (labels[data.type] || "Assistant");
+      el.appendChild(state);
+      const answer = document.createElement("div"); answer.textContent = data.answer || ""; el.appendChild(answer);
+      const meta = document.createElement("div"); meta.className = "meta";
+      try {
+        const url = new URL(data.source_url);
+        if (url.protocol === "https:" && ["hdfcfund.com", "amfiindia.com", "sebi.gov.in"].some(host => url.hostname === host || url.hostname.endsWith("." + host))) {
+          const link = document.createElement("a"); link.href = url.href; link.target = "_blank"; link.rel = "noopener noreferrer";
+          link.textContent = "View official source"; link.setAttribute("aria-label", "View official source on " + url.hostname + " (opens in a new tab)"); meta.appendChild(link);
         }
-      }
-
-      form.addEventListener("submit", (event) => {
-        event.preventDefault();
-        sendQuestion(input.value);
-      });
-
-      document.getElementById("chips").addEventListener("click", (event) => {
-        const button = event.target.closest("button[data-q]");
-        if (!button) return;
-        input.value = button.getAttribute("data-q");
-        sendQuestion(button.getAttribute("data-q"));
-      });
-    </script>
-  </body>
+      } catch (_) {}
+      const date = document.createElement("span"); date.textContent = "Last updated from sources: " + (data.last_updated || "Unavailable"); meta.appendChild(date);
+      el.appendChild(meta); transcript.appendChild(el); scrollChat();
+    }
+    function questionWithFund(question) {
+      const selected = schemes.find(scheme => scheme.id === fund.value);
+      const normalize = text => text.toLowerCase().replace(/[-_]+/g, " ").replace(/\s+/g, " ");
+      const normalized = normalize(question);
+      const namedFund = schemes.some(scheme => scheme.aliases.some(alias => normalized.includes(normalize(alias))));
+      if (!selected || namedFund || /statement|capital[ -]gains|\bcas\b/i.test(question)) return question;
+      return question + " (" + selected.name + ")";
+    }
+    async function sendQuestion(text) {
+      const question = (text || "").trim();
+      if (!question || busy) return;
+      const contextual = questionWithFund(question);
+      if (contextual.length > 4000) { input.setCustomValidity("Please shorten your question to leave room for the selected fund."); input.reportValidity(); return; }
+      input.setCustomValidity(""); input.value = ""; revealChat(); setBusy(true);
+      const pending = document.createElement("div"); pending.className = "msg pending"; pending.textContent = "Finding an answer in official documents..."; transcript.appendChild(pending); scrollChat();
+      const controller = new AbortController(); const timeout = setTimeout(() => controller.abort(), 90000);
+      try {
+        const res = await fetch("/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question: contextual }), signal: controller.signal });
+        if (!res.ok) throw new Error("Request failed");
+        const data = await res.json(); pending.remove();
+        if (data.type !== "pii") addUser(contextual);
+        addBot(data);
+      } catch (_) {
+        pending.remove();
+        const error = document.createElement("div"); error.className = "msg bot error"; error.textContent = "Could not reach the assistant. Please try sending your question again."; transcript.appendChild(error); scrollChat();
+      } finally { clearTimeout(timeout); setBusy(false); input.focus(); }
+    }
+    function updateExamples() {
+      const selected = schemes.find(scheme => scheme.id === fund.value);
+      const examples = selected ? [
+        { label: "Expense ratio", question: "What is the expense ratio of " + selected.name + " Direct Growth?" },
+        selected.category === "elss" ? { label: "Lock-in period", question: "What is the lock-in for " + selected.name + "?" } : { label: "Exit load", question: "What is the exit load of " + selected.name + "?" },
+        { label: "Benchmark", question: "What is the benchmark of " + selected.name + "?" }
+      ] : defaults;
+      chips.replaceChildren();
+      examples.forEach(example => { const button = document.createElement("button"); button.type = "button"; button.textContent = example.label; button.dataset.q = example.question; chips.appendChild(button); });
+    }
+    form.addEventListener("submit", event => { event.preventDefault(); sendQuestion(input.value); });
+    input.addEventListener("input", () => input.setCustomValidity(""));
+    chips.addEventListener("click", event => { const button = event.target.closest("button[data-q]"); if (button) sendQuestion(button.dataset.q); });
+    fund.addEventListener("change", updateExamples);
+    fetch("/schemes").then(res => { if (!res.ok) throw new Error("Fund list unavailable"); return res.json(); }).then(data => {
+      schemes = data;
+      fund.disabled = busy;
+      schemes.forEach(scheme => { const option = document.createElement("option"); option.value = scheme.id; option.textContent = scheme.name; fund.appendChild(option); });
+    }).catch(() => { fund.disabled = true; document.getElementById("fund-hint").textContent = "Fund selection is unavailable. Please include the fund name in your question."; });
+  </script>
+</body>
 </html>

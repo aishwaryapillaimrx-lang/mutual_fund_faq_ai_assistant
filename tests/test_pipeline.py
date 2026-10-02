@@ -118,6 +118,7 @@ def test_llm_not_called_when_gate_fails(monkeypatch) -> None:
 def test_missing_api_key_is_busy_not_crash(monkeypatch) -> None:
     monkeypatch.setattr(pipeline, "retrieve", lambda q, s=None: [_chunk(0.8)])
     monkeypatch.setattr(config, "ANTHROPIC_API_KEY", "")
+    monkeypatch.setattr(config, "GROQ_API_KEY", "")
     assert answer_question("exit load of HDFC Large Cap?")["type"] == "not_found"
 
 
@@ -133,7 +134,7 @@ def test_non_allowlisted_citation_is_dropped() -> None:
 def test_real_index_gate() -> None:
     if not (INDEX_DIR / "chroma.sqlite3").exists():
         pytest.skip("index not built")
-    if not config.ANTHROPIC_API_KEY:
+    if not (config.ANTHROPIC_API_KEY or config.GROQ_API_KEY):
         pytest.skip("no ANTHROPIC_API_KEY")
     ok = answer_question("What is the expense ratio of HDFC Large Cap Fund Direct Growth?")
     assert ok["type"] == "factual"
@@ -184,6 +185,26 @@ def test_startup_quiet_when_index_complete(monkeypatch, caplog) -> None:
 
     monkeypatch.setattr(main, "index_chunk_counts", lambda: {s.scheme_id: 5 for s in SCHEMES})
     monkeypatch.setattr(main, "ANTHROPIC_API_KEY", "k")
+    with caplog.at_level("ERROR", logger="uvicorn.error"):
+        with TestClient(main.app):
+            pass
+    assert caplog.text == ""
+
+
+def test_answer_date_follows_selected_source(monkeypatch):
+    from dataclasses import replace
+    chunk = replace(_chunk(0.8), snapshot_date="2026-10-02")
+    monkeypatch.setattr(pipeline, "retrieve", lambda q, s=None: [chunk])
+    monkeypatch.setattr(pipeline, "generate_answer", lambda q, c: "SOURCE: 1\nExit load is nil.")
+    assert answer_question("exit load of HDFC Large Cap?")["last_updated"] == "2026-10-02"
+
+
+def test_startup_accepts_groq_only(monkeypatch, caplog):
+    from app import main
+    from app.catalog import SCHEMES
+    monkeypatch.setattr(main, "index_chunk_counts", lambda: {s.scheme_id: 5 for s in SCHEMES})
+    monkeypatch.setattr(main, "ANTHROPIC_API_KEY", "")
+    monkeypatch.setattr(main, "GROQ_API_KEY", "test-key")
     with caplog.at_level("ERROR", logger="uvicorn.error"):
         with TestClient(main.app):
             pass

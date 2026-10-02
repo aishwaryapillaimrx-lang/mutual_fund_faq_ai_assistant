@@ -11,6 +11,7 @@ import hashlib
 import io
 import json
 import logging
+import math
 import re
 from collections import Counter
 from collections.abc import Callable, Sequence
@@ -30,6 +31,8 @@ from app.config import (
     CORPUS_DIR,
     CORPUS_SNAPSHOT_DATE,
     EMBED_MODEL,
+    HF_TOKEN,
+    HF_EMBED_TIMEOUT_SECONDS,
     INDEX_DIR,
     LLM_API_KEY,
     LLM_BASE_URL,
@@ -281,8 +284,53 @@ def _api_embed_fn() -> EmbedFn:
     return embed
 
 
-def get_embed_fn() -> EmbedFn:
-    """Shared by ingest and retrieval so both use the same vector space."""
+def _hf_embed_fn(*, query: bool = False) -> EmbedFn:
+    if not HF_TOKEN:
+        raise IngestError("Set HF_TOKEN to use hosted Hugging Face embeddings")
+    from huggingface_hub import InferenceClient
+
+    model_id = EMBED_MODEL.removeprefix("hf:").strip()
+    if not model_id:
+        raise IngestError("EMBED_MODEL must include a Hugging Face model ID after hf:")
+    client = InferenceClient(model=model_id, provider="hf-inference", token=HF_TOKEN,
+                             timeout=HF_EMBED_TIMEOUT_SECONDS)
+
+    def embed(texts: list[str]) -> list[list[float]]:
+        if not texts:
+            return []
+        inputs = texts
+        if query and model_id == "BAAI/bge-small-en-v1.5":
+            inputs = ["Represent this sentence for searching relevant passages: " + t for t in texts]
+        try:
+            result = client.feature_extraction(inputs, normalize=True, truncate=True)
+            rows = result.tolist() if hasattr(result, "tolist") else result
+            if not isinstance(rows, list) or len(rows) != len(texts):
+                raise ValueError("unexpected embedding count")
+            vectors = []
+            dimension = None
+            for row in rows:
+                vector = [float(value) for value in row]
+                if not vector or not all(math.isfinite(value) for value in vector):
+                    raise ValueError("invalid embedding values")
+                dimension = dimension or len(vector)
+                if len(vector) != dimension:
+                    raise ValueError("inconsistent embedding dimensions")
+                norm = math.sqrt(sum(value * value for value in vector))
+                if norm == 0:
+                    raise ValueError("zero embedding")
+                vectors.append([value / norm for value in vector])
+            return vectors
+        except Exception as exc:
+            # Provider exception text can include requests; never echo it.
+            raise IngestError(f"Hugging Face embedding failed ({type(exc).__name__})") from None
+
+    return embed
+
+
+def get_embed_fn(*, query: bool = False) -> EmbedFn:
+    """Use the configured provider for documents and questions."""
+    if EMBED_MODEL.startswith("hf:"):
+        return _hf_embed_fn(query=query)
     if EMBED_MODEL.strip().lower() in ("", "local"):
         return _local_embed_fn()
     return _api_embed_fn()
@@ -364,8 +412,13 @@ def run_ingest(
         raise IngestError("no documents ingested; index left unchanged")
 
     embed = embed_fn or get_embed_fn()
+    batch = 16 if EMBED_MODEL.startswith("hf:") else 64
+    # Finish provider calls before replacing a working index.
+    embeddings = []
+    for start in range(0, len(records), batch):
+        part = records[start : start + batch]
+        embeddings.extend(embed([record["text"] for record in part]))
     collection = _recreate_collection(open_client(index_dir), snapshot_date)
-    batch = 64
     for start in range(0, len(records), batch):
         part = records[start : start + batch]
         texts = [record["text"] for record in part]
@@ -373,7 +426,7 @@ def run_ingest(
             ids=[record["chunk_id"] for record in part],
             documents=texts,
             metadatas=[record["metadata"] for record in part],
-            embeddings=embed(texts),
+            embeddings=embeddings[start : start + len(part)],
         )
 
     (index_dir / "ingest_report.json").write_text(
