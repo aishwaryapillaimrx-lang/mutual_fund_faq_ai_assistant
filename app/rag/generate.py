@@ -1,4 +1,4 @@
-"""Claude call: answer only from retrieved chunks."""
+"""Claude call with Groq fallback: answer only from retrieved chunks."""
 
 from __future__ import annotations
 
@@ -20,10 +20,16 @@ class GenerationError(Exception):
     """Timeout, API failure, refusal, or empty output. Caller shows the busy message."""
 
 
-def generate_answer(question: str, chunks: Sequence[RetrievedChunk]) -> str:
+def _try_anthropic(question: str, chunks: Sequence[RetrievedChunk]) -> str | None:
+    """Try to generate answer using Anthropic (Claude).
+    
+    Returns the answer text on success, or None if the API fails.
+    Raises GenerationError only for unexpected errors.
+    """
     if not config.ANTHROPIC_API_KEY:
-        logger.error("ANTHROPIC_API_KEY is not set")
-        raise GenerationError("no api key")
+        logger.debug("ANTHROPIC_API_KEY is not set, skipping Anthropic")
+        return None
+    
     client = anthropic.Anthropic(
         api_key=config.ANTHROPIC_API_KEY,
         timeout=config.LLM_TIMEOUT_SECONDS,
@@ -38,13 +44,84 @@ def generate_answer(question: str, chunks: Sequence[RetrievedChunk]) -> str:
             messages=[{"role": "user", "content": build_user_message(question, chunks)}],
         )
     except anthropic.APIError as exc:  # timeouts, connection, status errors
-        logger.error("LLM call failed: %s", type(exc).__name__)
-        raise GenerationError(type(exc).__name__) from exc
+        logger.warning("Anthropic API call failed (%s), will try Groq fallback", type(exc).__name__)
+        return None
 
     if response.stop_reason != "end_turn":
-        logger.error("LLM stopped early: %s", response.stop_reason)
-        raise GenerationError(str(response.stop_reason))
+        logger.warning("Anthropic stopped early (%s), will try Groq fallback", response.stop_reason)
+        return None
+    
     text = "".join(b.text for b in response.content if b.type == "text").strip()
     if not text:
-        raise GenerationError("empty output")
+        logger.warning("Anthropic returned empty output, will try Groq fallback")
+        return None
+    
     return text
+
+
+def _try_groq(question: str, chunks: Sequence[RetrievedChunk]) -> str | None:
+    """Try to generate answer using Groq as fallback.
+    
+    Returns the answer text on success, or None if the API fails.
+    """
+    if not config.GROQ_API_KEY:
+        logger.debug("GROQ_API_KEY is not set, cannot use Groq fallback")
+        return None
+    
+    try:
+        from groq import Groq
+    except ImportError:
+        logger.error("groq library not installed, cannot use Groq fallback")
+        return None
+    
+    client = Groq(
+        api_key=config.GROQ_API_KEY,
+        timeout=config.LLM_TIMEOUT_SECONDS,
+    )
+    try:
+        response = client.chat.completions.create(
+            model=config.GROQ_CHAT_MODEL,
+            max_tokens=MAX_TOKENS,
+            system=SYSTEM_PROMPT,
+            messages=[{"role": "user", "content": build_user_message(question, chunks)}],
+        )
+    except Exception as exc:  # catch all Groq exceptions
+        logger.error("Groq API call failed: %s", type(exc).__name__)
+        return None
+
+    if not response.choices:
+        logger.error("Groq returned no choices")
+        return None
+    
+    text = response.choices[0].message.content
+    if isinstance(text, str):
+        text = text.strip()
+    
+    if not text:
+        logger.error("Groq returned empty output")
+        return None
+    
+    return text
+
+
+def generate_answer(question: str, chunks: Sequence[RetrievedChunk]) -> str:
+    """Generate answer using Anthropic, with Groq as fallback.
+    
+    Tries Anthropic first. If it fails, falls back to Groq.
+    Raises GenerationError if both providers fail or are unavailable.
+    """
+    # Try primary provider (Anthropic)
+    answer = _try_anthropic(question, chunks)
+    if answer is not None:
+        logger.info("Answer generated using Anthropic")
+        return answer
+    
+    # Try fallback provider (Groq)
+    answer = _try_groq(question, chunks)
+    if answer is not None:
+        logger.info("Answer generated using Groq fallback")
+        return answer
+    
+    # Both providers failed
+    logger.error("All LLM providers exhausted or unavailable")
+    raise GenerationError("all providers exhausted")
