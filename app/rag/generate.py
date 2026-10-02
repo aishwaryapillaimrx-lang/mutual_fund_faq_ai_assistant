@@ -105,23 +105,39 @@ def _try_groq(question: str, chunks: Sequence[RetrievedChunk]) -> str | None:
 
 
 def generate_answer(question: str, chunks: Sequence[RetrievedChunk]) -> str:
-    """Generate answer using Anthropic, with Groq as fallback.
-    
-    Tries Anthropic first. If it fails, falls back to Groq.
-    Raises GenerationError if both providers fail or are unavailable.
-    """
-    # Try primary provider (Anthropic)
-    answer = _try_anthropic(question, chunks)
-    if answer is not None:
-        logger.info("Answer generated using Anthropic")
-        return answer
-    
-    # Try fallback provider (Groq)
-    answer = _try_groq(question, chunks)
-    if answer is not None:
-        logger.info("Answer generated using Groq fallback")
-        return answer
-    
-    # Both providers failed
-    logger.error("All LLM providers exhausted or unavailable")
+    if config.ANTHROPIC_API_KEY:
+        try:
+            client = anthropic.Anthropic(
+                api_key=config.ANTHROPIC_API_KEY,
+                timeout=config.LLM_TIMEOUT_SECONDS,
+                max_retries=1,
+            )
+            response = client.messages.create(
+                model=config.CHAT_MODEL,
+                max_tokens=MAX_TOKENS,
+                system=SYSTEM_PROMPT,
+                messages=[{"role": "user", "content": build_user_message(question, chunks)}],
+            )
+            text = "".join(b.text for b in response.content if b.type == "text").strip()
+            if text:
+                return text
+        except Exception:
+            pass
+
+    if config.GROQ_API_KEY:
+        try:
+            from groq import Groq
+            client = Groq(api_key=config.GROQ_API_KEY, timeout=config.LLM_TIMEOUT_SECONDS)
+            response = client.chat.completions.create(
+                model=config.GROQ_CHAT_MODEL,
+                max_tokens=MAX_TOKENS,
+                system=SYSTEM_PROMPT,
+                messages=[{"role": "user", "content": build_user_message(question, chunks)}],
+            )
+            text = response.choices[0].message.content
+            if isinstance(text, str) and text.strip():
+                return text.strip()
+        except Exception:
+            pass
+
     raise GenerationError("all providers exhausted")

@@ -26,9 +26,12 @@ LLM_API_KEY = os.getenv("LLM_API_KEY", "")
 LLM_BASE_URL = os.getenv("LLM_BASE_URL", "https://api.openai.com/v1")
 EMBED_MODEL = os.getenv("EMBED_MODEL", "local")
 
-# Answer generation uses Claude.
+# Answer generation uses Claude first; Groq is the fallback.
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 CHAT_MODEL = os.getenv("CHAT_MODEL") or "claude-sonnet-5-5"
+
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+GROQ_CHAT_MODEL = os.getenv("GROQ_CHAT_MODEL", "mixtral-8x7b-32768")
 LLM_TIMEOUT_SECONDS = float(os.getenv("LLM_TIMEOUT_SECONDS", "30"))
 RETRIEVAL_SCORE_THRESHOLD = float(os.getenv("RETRIEVAL_SCORE_THRESHOLD", "0.35"))
 
