@@ -1,0 +1,91 @@
+{
+  "_note": "Official sources only (hdfcfund.com, amfiindia.com, sebi.gov.in). Never add groww.in or other aggregators. Use local_path for pages that block automated download.",
+  "documents": [
+    {
+      "scheme_id": "hdfc_large_cap_direct_growth",
+      "doc_type": "kim",
+      "title": "KIM - HDFC Large Cap Fund (Nov 21, 2025)",
+      "source_url": "https://files.hdfcfund.com/s3fs-public/KIM/2025-11/KIM%20-%20HDFC%20Large%20Cap%20Fund%20dated%20November%2021,%202025.pdf"
+    },
+    {
+      "scheme_id": "hdfc_large_cap_direct_growth",
+      "doc_type": "factsheet",
+      "title": "Fund Facts - HDFC Large Cap Fund (Aug 2026)",
+      "source_url": "https://files.hdfcfund.com/s3fs-public/Others/2026-09/Fund%20Facts%20-%20HDFC%20Large%20Cap%20Fund_August%2026.pdf"
+    },
+    {
+      "scheme_id": "hdfc_equity_fund_direct_growth",
+      "doc_type": "kim",
+      "title": "KIM - HDFC Flexi Cap Fund, formerly HDFC Equity Fund (Nov 21, 2025)",
+      "source_url": "https://files.hdfcfund.com/s3fs-public/KIM/2025-11/KIM%20-%20HDFC%20Flexi%20Cap%20Fund%20dated%20November%2021,%202025.pdf"
+    },
+    {
+      "scheme_id": "hdfc_equity_fund_direct_growth",
+      "doc_type": "factsheet",
+      "title": "Fund Facts - HDFC Flexi Cap Fund (Aug 2026)",
+      "source_url": "https://files.hdfcfund.com/s3fs-public/Others/2026-09/Fund%20Facts%20-%20HDFC%20Flexi%20Cap%20Fund_August%2026.pdf"
+    },
+    {
+      "scheme_id": "hdfc_elss_direct_growth",
+      "doc_type": "kim",
+      "title": "KIM - HDFC ELSS Tax Saver (Nov 21, 2025)",
+      "source_url": "https://files.hdfcfund.com/s3fs-public/KIM/2025-11/KIM%20-%20HDFC%20ELSS%20Tax%20Saver%20dated%20November%2021,%202025.pdf"
+    },
+    {
+      "scheme_id": "hdfc_small_cap_direct_growth",
+      "doc_type": "kim",
+      "title": "KIM - HDFC Small Cap Fund (Nov 21, 2025)",
+      "source_url": "https://files.hdfcfund.com/s3fs-public/KIM/2025-11/KIM%20-%20HDFC%20Small%20Cap%20Fund%20dated%20November%2021,%202025.pdf"
+    },
+    {
+      "scheme_id": "hdfc_small_cap_direct_growth",
+      "doc_type": "factsheet",
+      "title": "Fund Facts - HDFC Small Cap Fund (Aug 2026)",
+      "source_url": "https://files.hdfcfund.com/s3fs-public/Others/2026-09/Fund%20Facts%20-%20HDFC%20Small%20Cap%20Fund_August%2026.pdf"
+    },
+    {
+      "scheme_id": "hdfc_balanced_advantage_direct_growth",
+      "doc_type": "kim",
+      "title": "KIM - HDFC Balanced Advantage Fund (Nov 21, 2025)",
+      "source_url": "https://files.hdfcfund.com/s3fs-public/KIM/2025-11/KIM%20-%20HDFC%20Balanced%20Advantage%20Fund%20dated%20November%2021,%202025.pdf"
+    },
+    {
+      "scheme_id": "hdfc_balanced_advantage_direct_growth",
+      "doc_type": "factsheet",
+      "title": "Fund Facts - HDFC Balanced Advantage Fund (Aug 2026)",
+      "source_url": "https://files.hdfcfund.com/s3fs-public/Others/2026-09/Fund%20Facts%20-%20HDFC%20Balanced%20Advantage%20Fund_Aug%2026.pdf"
+    },
+    {
+      "scheme_id": null,
+      "doc_type": "statements",
+      "title": "AMFI - Download Consolidated Account Statement (CAS)",
+      "source_url": "https://www.amfiindia.com/online-center/download-cas"
+    },
+    {
+      "scheme_id": null,
+      "doc_type": "statements",
+      "title": "AMFI - Consolidated Account Statement (CAS)",
+      "source_url": "https://www.amfiindia.com/investor/become-mf-distributor?zoneName=consolidatedAcct"
+    },
+    {
+      "scheme_id": null,
+      "doc_type": "statements",
+      "title": "HDFC MF - How to get a capital gain statement",
+      "source_url": "https://www.hdfcfund.com/learn/blog/how-get-capital-gain-statement-mutual-fund-schemes-india",
+      "local_path": "data/corpus/manual/hdfc-capital-gain-statement.html",
+      "optional": true
+    },
+    {
+      "scheme_id": null,
+      "doc_type": "education",
+      "title": "AMFI - Introduction to Mutual Funds",
+      "source_url": "https://www.amfiindia.com/investor/knowledge-center-info?zoneName=IntroductionMutualFunds"
+    },
+    {
+      "scheme_id": null,
+      "doc_type": "education",
+      "title": "AMFI - Risks in Mutual Funds",
+      "source_url": "https://www.amfiindia.com/investor/knowledge-center-info?zoneName=riskInMutualFunds"
+    }
+  ]
+}

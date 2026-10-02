@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>HDFC MF facts-only FAQ</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #12202e;
+        --muted: #5b6b7a;
+        --line: #d7e0e8;
+        --paper: #f6f8fa;
+        --card: #ffffff;
+        --accent: #0b6e4f;
+        --accent-soft: #e6f4ee;
+        --user: #e8eef4;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Segoe UI", system-ui, sans-serif;
+        background: var(--paper);
+        color: var(--ink);
+      }
+      main {
+        max-width: 40rem;
+        margin: 0 auto;
+        padding: 1.5rem 1rem 2.5rem;
+      }
+      h1 { font-size: 1.25rem; margin: 0 0 0.35rem; }
+      .welcome { color: var(--muted); margin: 0 0 1rem; line-height: 1.45; }
+      .disclaimer {
+        display: inline-block;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-size: 0.85rem;
+        font-weight: 600;
+        padding: 0.35rem 0.65rem;
+        border-radius: 999px;
+        margin-bottom: 1rem;
+      }
+      .chips { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
+      .chips button {
+        text-align: left;
+        border: 1px solid var(--line);
+        background: var(--card);
+        border-radius: 0.6rem;
+        padding: 0.65rem 0.75rem;
+        cursor: pointer;
+        color: var(--ink);
+        font: inherit;
+      }
+      .chips button:hover { border-color: var(--accent); }
+      #transcript {
+        min-height: 12rem;
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 0.75rem;
+        padding: 0.75rem;
+        margin-bottom: 0.75rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
+      }
+      .msg { padding: 0.65rem 0.75rem; border-radius: 0.65rem; line-height: 1.45; }
+      .msg.user { background: var(--user); align-self: flex-end; max-width: 90%; }
+      .msg.bot { background: var(--accent-soft); }
+      .msg a { color: var(--accent); word-break: break-all; }
+      .meta { font-size: 0.85rem; color: var(--muted); margin-top: 0.4rem; }
+      form { display: flex; gap: 0.5rem; }
+      input[type="text"] {
+        flex: 1;
+        padding: 0.7rem 0.75rem;
+        border: 1px solid var(--line);
+        border-radius: 0.6rem;
+        font: inherit;
+      }
+      form button[type="submit"] {
+        background: var(--accent);
+        color: white;
+        border: 0;
+        border-radius: 0.6rem;
+        padding: 0.7rem 1rem;
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .error { color: #9b1c1c; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="disclaimer">Facts-only. No investment advice.</p>
+      <h1>HDFC mutual fund FAQ</h1>
+      <p class="welcome">
+        Ask factual questions about five HDFC mutual fund schemes.
+      </p>
+      <div class="chips" id="chips">
+        <button type="button" data-q="What is the expense ratio of HDFC Large Cap Fund Direct Growth?">
+          What is the expense ratio of HDFC Large Cap Fund Direct Growth?
+        </button>
+        <button type="button" data-q="What is the lock-in for HDFC ELSS Tax Saver?">
+          What is the lock-in for HDFC ELSS Tax Saver?
+        </button>
+        <button type="button" data-q="How do I download a capital-gains statement?">
+          How do I download a capital-gains statement?
+        </button>
+      </div>
+      <div id="transcript" aria-live="polite"></div>
+      <form id="chat-form">
+        <input
+          id="question"
+          type="text"
+          name="question"
+          autocomplete="off"
+          placeholder="Ask a scheme fact…"
+        />
+        <button type="submit">Send</button>
+      </form>
+    </main>
+    <script>
+      const form = document.getElementById("chat-form");
+      const input = document.getElementById("question");
+      const transcript = document.getElementById("transcript");
+
+      function addUser(text) {
+        const el = document.createElement("div");
+        el.className = "msg user";
+        el.textContent = text;
+        transcript.appendChild(el);
+      }
+
+      function addBot(data) {
+        const el = document.createElement("div");
+        el.className = "msg bot";
+        const answer = document.createElement("div");
+        answer.textContent = data.answer || "";
+        el.appendChild(answer);
+        const meta = document.createElement("div");
+        meta.className = "meta";
+        const link = document.createElement("a");
+        link.href = data.source_url;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = data.source_url;
+        meta.append("Source: ", link);
+        meta.appendChild(document.createElement("br"));
+        meta.append("Last updated from sources: " + (data.last_updated || ""));
+        el.appendChild(meta);
+        transcript.appendChild(el);
+        transcript.scrollTop = transcript.scrollHeight;
+      }
+
+      function addError(message) {
+        const el = document.createElement("div");
+        el.className = "msg bot error";
+        el.textContent = message;
+        transcript.appendChild(el);
+      }
+
+      async function sendQuestion(text) {
+        const question = (text || "").trim();
+        if (!question) return;
+        addUser(question);
+        input.value = "";
+        try {
+          const res = await fetch("/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question }),
+          });
+          if (!res.ok) throw new Error("Request failed");
+          const data = await res.json();
+          addBot(data);
+        } catch (err) {
+          addError("Could not reach the assistant. Try again.");
+        }
+      }
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        sendQuestion(input.value);
+      });
+
+      document.getElementById("chips").addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-q]");
+        if (!button) return;
+        input.value = button.getAttribute("data-q");
+        sendQuestion(button.getAttribute("data-q"));
+      });
+    </script>
+  </body>
+</html>
